@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 
 interface ToastProps {
   message: string;
-  duration?: number; // Duration in milliseconds
+  duration?: number;
   onClose: () => void;
 }
 
@@ -13,22 +14,28 @@ const Toast: React.FC<ToastProps> = ({ message, duration = 3000, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      onClose();
+      setTimeout(onClose, 300); // Allow exit animation to play
     }, duration);
 
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
   return (
-    <div
-      className={cn(
-        'fixed bottom-4 right-4 p-4 bg-gray-800 text-white rounded-lg shadow-lg transition-transform transform',
-        isVisible ? 'translate-y-0' : 'translate-y-full'
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className={cn(
+            'fixed bottom-4 right-4 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-50 border border-purple-500'
+          )}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          transition={{ duration: 0.3 }}
+        >
+          {message}
+        </motion.div>
       )}
-      style={{ transition: 'transform 0.3s ease-in-out' }}
-    >
-      {message}
-    </div>
+    </AnimatePresence>
   );
 };
 

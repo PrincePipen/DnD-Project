@@ -1,9 +1,9 @@
 import React from 'react';
-import { useGameStore } from '../../store/combat-store';
+import { useGameStore } from '../../store/game-store'; // Was incorrectly importing from combat-store
 import { cn } from '../../lib/utils';
 
 const ActionBar = () => {
-  const { currentAction, setAction } = useGameStore();
+  const { currentScene, updateScene, addToLog } = useGameStore();
 
   const actions = [
     { name: 'Attack', value: 'attack' },
@@ -12,6 +12,12 @@ const ActionBar = () => {
     { name: 'Cast Spell', value: 'cast_spell' },
   ];
 
+  const handleAction = (actionValue: string) => {
+    const newScene = `You chose to ${actionValue.replace('_', ' ')}.`;
+    updateScene(newScene);
+    addToLog(newScene);
+  };
+
   return (
     <div className="flex justify-around bg-gray-800 p-4 rounded-lg shadow-lg">
       {actions.map((action) => (
@@ -19,9 +25,9 @@ const ActionBar = () => {
           key={action.value}
           className={cn(
             'px-4 py-2 rounded-md transition-colors duration-200',
-            currentAction === action.value ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-purple-500'
+            'bg-gray-700 text-gray-300 hover:bg-purple-500'
           )}
-          onClick={() => setAction(action.value)}
+          onClick={() => handleAction(action.value)}
         >
           {action.name}
         </button>

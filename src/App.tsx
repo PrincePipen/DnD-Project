@@ -9,7 +9,8 @@ import CharacterSheet from './pages/CharacterSheet';
 import DungeonExplorer from './pages/DungeonExplorer';
 import Inventory from './pages/Inventory';
 import StoryJournal from './pages/StoryJournal';
-import PageTransition from './components/animations/PageTransition';
+// Import as named export
+import { PageTransition } from './components/animations/PageTransition';
 
 function App() {
   return (
@@ -36,3 +37,22 @@ function App() {
 }
 
 export default App;
+
+// File structure
+// public/
+//   assets/
+//     images/
+//       backgrounds/
+//         dungeon-map.png
+//       characters/
+//         warrior.png
+//         wizard.png
+//         rogue.png
+//         cleric.png
+//     audio/
+//       ambient/
+//         dungeon.mp3
+//         forest.mp3
+//       effects/
+//         dice-roll.mp3
+//         spell-cast.mp3

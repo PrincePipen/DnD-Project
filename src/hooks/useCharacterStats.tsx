@@ -1,33 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/game-store';
 import { Character } from '../types/character';
 
-const useCharacterStats = () => {
+export const useCharacterStats = () => {
   const { character, setCharacter } = useGameStore();
-  const [stats, setStats] = useState<Character | null>(character);
+  const [stats, setStats] = useState<Character['stats'] | null>(character?.stats || null);
 
   useEffect(() => {
-    setStats(character);
+    if (character?.stats) {
+      setStats(character.stats);
+    }
   }, [character]);
 
-  const updateStat = (stat: keyof Character['stats'], value: number) => {
-    if (stats) {
-      const updatedStats = {
-        ...stats,
-        stats: {
-          ...stats.stats,
-          [stat]: value,
-        },
-      };
-      setCharacter(updatedStats);
-      setStats(updatedStats);
-    }
+  const getCharacterStats = () => {
+    return stats;
   };
 
-  return {
-    stats,
-    updateStat,
+  const updateStat = (stat: keyof Character['stats'], value: number) => {
+    if (!character) return;
+    
+    const updatedCharacter = {
+      ...character,
+      stats: {
+        ...character.stats,
+        [stat]: value,
+      }
+    };
+    
+    setCharacter(updatedCharacter);
   };
+
+  return { stats, updateStat, getCharacterStats };
 };
 
 export default useCharacterStats;

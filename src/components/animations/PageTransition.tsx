@@ -1,10 +1,10 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-
 import { ReactNode } from 'react';
 
-const PageTransition = ({ children }: { children: ReactNode }) => {
+// Changed from default export to named export to match import in App.tsx
+export const PageTransition = ({ children }: { children: ReactNode }) => {
   const { pathname } = useLocation();
 
   const variants = {
