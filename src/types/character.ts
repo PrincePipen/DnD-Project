@@ -1,4 +1,5 @@
 export interface Character {
+  id: string;
   name: string;
   race: string;
   class: string;
@@ -11,15 +12,17 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  inventory?: InventoryItem[];
-  abilities?: string[];
+  inventory: InventoryItemType[];
+  experience: number;
+  health: number;
+  maxHealth: number;
 }
 
-export interface InventoryItem {
+export interface InventoryItemType {
   id: string;
   name: string;
   description: string;
+  type: 'weapon' | 'armor' | 'potion' | 'tool' | 'treasure';
   quantity: number;
-  type: string; // e.g., "weapon", "armor", "potion"
-  icon?: string;
+  stats?: Record<string, number | string>;
 }

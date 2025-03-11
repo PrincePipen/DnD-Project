@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/game-store';
 import { motion } from 'framer-motion';
 import { Card } from '../components/shared/Card';
+import { Character } from '../types/character';
+import { generateInitialStats, generateStartingInventory, calculateInitialHealth } from '../utils/character-utils';
+import { saveGameState } from '../services/storageService';
 
 const CharacterCreation = () => {
   const navigate = useNavigate();
   const setCharacter = useGameStore((state) => state.setCharacter);
+  const existingCharacter = useGameStore((state) => state.character);
   const [formData, setFormData] = useState({
-    name: '',
-    race: 'human',
-    class: 'fighter',
+    name: existingCharacter?.name || '',
+    race: existingCharacter?.race || 'human',
+    class: existingCharacter?.class || 'fighter',
   });
+
+  // Redirect if character already exists
+  useEffect(() => {
+    if (existingCharacter) {
+      navigate('/game');
+    }
+  }, [existingCharacter, navigate]);
 
   const [step, setStep] = useState(1);
   const [showAnimation, setShowAnimation] = useState(false);
@@ -34,22 +45,22 @@ const CharacterCreation = () => {
     e.preventDefault();
     setShowAnimation(true);
     
-    // Generate random but balanced stats
-    const generateStat = () => Math.floor(Math.random() * 6) + 8; // 8-13 range
-    
+    const newCharacter: Character = {
+      id: crypto.randomUUID(),
+      name: formData.name,
+      race: formData.race,
+      class: formData.class,
+      level: 1,
+      stats: generateInitialStats({ race: formData.race, class: formData.class }),
+      inventory: generateStartingInventory(formData.class),
+      experience: 0,
+      health: calculateInitialHealth(formData.class),
+      maxHealth: calculateInitialHealth(formData.class)
+    };
+
     setTimeout(() => {
-      setCharacter({
-        ...formData,
-        level: 1,
-        stats: {
-          strength: formData.class === 'fighter' ? generateStat() + 4 : generateStat(),
-          dexterity: formData.class === 'rogue' ? generateStat() + 4 : generateStat(),
-          constitution: formData.race === 'dwarf' ? generateStat() + 2 : generateStat(),
-          intelligence: formData.class === 'wizard' ? generateStat() + 4 : generateStat(),
-          wisdom: formData.class === 'cleric' ? generateStat() + 4 : generateStat(),
-          charisma: formData.race === 'human' ? generateStat() + 2 : generateStat(),
-        },
-      });
+      setCharacter(newCharacter);
+      saveGameState({ character: newCharacter });
       navigate('/game');
     }, 2000);
   };

@@ -10,7 +10,7 @@ import { fetchAIResponse } from '../services/aiService';
 import Toast from '../components/ui/Toast';
 
 const Game = () => {
-  const { character, currentScene, gameLog, updateScene, addToLog } = useGameStore();
+  const { character, currentScene, gameLog, updateScene, addToLog, questProgress, setQuestProgress } = useGameStore();
   const navigate = useNavigate();
   const { playEffect, playAmbient } = useAudio();
   
@@ -20,7 +20,7 @@ const Game = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
+  const [, setAiResponse] = useState('');
   
   // Flag to track whether initial scene has been set
   const initialSceneSet = useRef(false);
@@ -51,23 +51,40 @@ const Game = () => {
 
   // Progress the story based on user choices
   const handleContinue = async () => {
-    if (storyProgress >= storyBeats.length - 1) {
-      // At end of intro story, transition to open-ended AI storytelling
-      await handleAIContinue();
-    } else {
-      // Progress through the predefined story
-      const nextProgress = storyProgress + 1;
-      setStoryProgress(nextProgress);
-      updateScene(storyBeats[nextProgress]);
-      addToLog(storyBeats[nextProgress]);
-      playEffect('ambient');
+    setIsLoading(true);
+    try {
+      const nextScene = await fetchAIResponse({
+        character,
+        currentScene,
+        recentEvents: gameLog.slice(-3),
+        questProgress,
+        location: determineLocation(questProgress),
+        action: 'continue',
+        diceResult: undefined
+      });
+
+      updateScene(nextScene);
+      addToLog(nextScene);
+      setQuestProgress(questProgress + 1);
       
-      // Show toast for important story points
-      if (nextProgress === storyBeats.length - 1) {
-        setToastMessage("Your adventure is about to truly begin!");
-        setShowToast(true);
+      // Change ambient sound based on location
+      if (questProgress > 5) {
+        playAmbient('dungeon');
       }
+    } catch (error) {
+      console.error('Failed to progress story:', error);
+      setToastMessage('Something went wrong with the story progression...');
+      setShowToast(true);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Helper function to determine current location
+  const determineLocation = (progress: number): string => {
+    if (progress < 3) return 'village';
+    if (progress < 6) return 'forest';
+    return 'dungeon';
   };
 
   const handleAIContinue = async () => {

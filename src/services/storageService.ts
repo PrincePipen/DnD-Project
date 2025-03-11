@@ -1,21 +1,36 @@
 import { useEffect } from 'react';
+import { Character } from '../types/character';
 
 const STORAGE_KEY = 'dnd-game-state';
 
-export const saveGameState = (state) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+interface GameState {
+  character: Character | null;
+  currentScene: string;
+  gameLog: string[];
+  questProgress: number;
+}
+
+export const saveGameState = (state: Partial<GameState>) => {
+  const currentState = loadGameState();
+  const newState = { ...currentState, ...state };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
 };
 
-export const loadGameState = () => {
+export const loadGameState = (): GameState => {
   const savedState = localStorage.getItem(STORAGE_KEY);
-  return savedState ? JSON.parse(savedState) : null;
+  return savedState ? JSON.parse(savedState) : {
+    character: null,
+    currentScene: '',
+    gameLog: [],
+    questProgress: 0
+  };
 };
 
 export const clearGameState = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-export const useGameStorage = (initialState) => {
+export const useGameStorage = (initialState: (state: GameState) => void) => {
   useEffect(() => {
     const savedState = loadGameState();
     if (savedState) {
@@ -23,7 +38,7 @@ export const useGameStorage = (initialState) => {
     }
   }, [initialState]);
 
-  const saveState = (state) => {
+  const saveState = (state: Partial<GameState>) => {
     saveGameState(state);
   };
 
