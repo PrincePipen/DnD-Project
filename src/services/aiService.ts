@@ -1,111 +1,93 @@
 import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = 'AIzaSyCh9pnnCMfcDsymFEKhkCk_yWev3YKVBYo';
+// Initialize the Google Generative AI with your API key
+// In production, this should be an environment variable
+const API_KEY = "AIzaSyCh9pnnCMfcDsymFEKhkCk_yWev3YKVBYo";
+const genAI = new GoogleGenerativeAI(API_KEY);
 
-// Initialize Google Generative AI
-const initializeGenAI = async () => {
-  try {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(API_KEY);
-    return genAI.getGenerativeModel({ model: "gemini-pro" });
-  } catch (error) {
-    console.error("Failed to initialize Google Generative AI:", error);
-    return null;
-  }
-};
-
-// Define interface for context parameter
-interface StoryContext {
+interface StoryGenerationParams {
   character?: {
-    name?: string;
-    level?: number;
-    race?: string;
-    class?: string;
+    name: string;
+    race: string;
+    class: string;
+    level: number;
   };
-  currentScene?: string;
-  gameProgress?: any;
-  previousScenes?: string[];
-  diceResult?: number;
+  currentLocation?: string;
+  recentEvents?: string[];
+  prompt?: string;
 }
 
-// Build structured prompt for storytelling
-const buildPrompt = (context: StoryContext) => {
-  const { character, currentScene, gameProgress, previousScenes = [] } = context;
-  
-  let prompt = `You are the AI Dungeon Master for a D&D game. 
-The player character is ${character?.name}, a level ${character?.level} ${character?.race} ${character?.class}.
-
-Current scene: ${currentScene}
-
-`;
-  
-  return prompt;
-};
-
-// Use Google's Generative AI to get a response
-export const fetchAIResponse = async (context: StoryContext) => {
+export const getAIStoryContent = async ({
+  character,
+  currentLocation = "forest path",
+  recentEvents = [],
+  prompt
+}: StoryGenerationParams) => {
   try {
-    const model = await initializeGenAI();
-    if (!model) {
-      throw new Error("Failed to initialize AI model");
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // Construct the context for the AI
+    let context = `You are a storyteller for a Dungeons & Dragons adventure. Write a short, engaging paragraph (maximum 3 sentences) `;
+    
+    if (character) {
+      context += `for ${character.name}, a level ${character.level} ${character.race} ${character.class}. `;
     }
     
-    let prompt = buildPrompt(context);
-  
-    if (context.diceResult !== undefined) {
-      prompt += `The player just rolled a ${context.diceResult} on a d20.\n`;
-      prompt += `Based on this roll, continue the story with a short, exciting description of what happens next. Keep it under 3 sentences.`;
-    } else {
-      prompt += `Continue the story from here with a rich, immersive description that builds on the current scene. Add interesting details, potential challenges, or opportunities. Keep it under 4 sentences.`;
+    if (currentLocation) {
+      context += `The character is currently in/at a ${currentLocation}. `;
     }
     
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    if (recentEvents && recentEvents.length > 0) {
+      context += `Recent events include: ${recentEvents.join('. ')}. `;
+    }
+    
+    context += prompt || "Continue the story with an interesting development or encounter.";
+
+    // Generate content with the model
+    const result = await model.generateContent(context);
+    const response = await result.response;
+    const text = response.text();
+    
+    return text;
   } catch (error) {
-    console.error('Error fetching AI response:', error);
-    return getMockResponse(context);
+    console.error("Error generating AI content:", error);
+    return "The journey continues as you move forward...";
   }
 };
 
-// Mock responses for testing and when API is unavailable
-const getMockResponse = (context: StoryContext) => {
-  const { character, diceResult } = context;
-  
-  const mockResponses = [
-    `The forest grows denser as ${character?.name} ventures deeper, with strange sounds echoing through the trees. A faint blue light flickers between distant trunks, beckoning with mysterious promise.`,
-    `Footprints mark the mud ahead - not human, but something with claws. They're fresh, suggesting whatever made them is close by.`,
-    `A rusted metal contraption lies partially buried in the soil. It looks ancient, possibly dwarven in origin, with strange runes etched into its surface.`,
-    `The village comes into view, but something is wrong. No smoke rises from chimneys, no children play in the streets.`,
-  ];
-  
-  if (diceResult !== undefined) {
-    if (diceResult >= 18) {
-      return `With an exceptional roll of ${diceResult}, you notice hidden details others would miss. A secret pathway reveals itself, offering a safe route forward.`;
-    } else if (diceResult > 10) {
-      return `Your roll of ${diceResult} is sufficient. You proceed carefully, avoiding the obvious dangers.`;
-    } else {
-      return `With a disappointing roll of ${diceResult}, you stumble slightly. The noise attracts unwanted attention from nearby creatures.`;
-    }
-  }
-  
-  // Return a random story continuation
-  return mockResponses[Math.floor(Math.random() * mockResponses.length)];
-};
-
-// Specific story generation for key moments
-export const generateStoryElement = async (elementType: string, context: StoryContext) => {
+export const generateRandomEncounter = async (characterLevel: number, environment: string) => {
   try {
-    const prompt = `As a D&D Dungeon Master, generate a compelling ${elementType} for a player who is a level ${context.character?.level} ${context.character?.race} ${context.character?.class}. Make it dramatic and suitable for their character.`;
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    const model = await initializeGenAI();
-    if (!model) {
-      throw new Error("Failed to initialize AI model");
-    }
+    const prompt = `Create a brief D&D random encounter for a level ${characterLevel} character in a ${environment} environment. 
+                   Describe the encounter in 2-3 sentences and provide three possible actions the player could take.
+                   Format as JSON with properties: "description" (string), "options" (array of 3 action strings), and "difficulty" (string: "easy", "medium", or "hard").`;
     
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    const response = await result.response;
+    const text = response.text();
+    
+    // Parse the JSON response
+    try {
+      // Clean up the response text to ensure it contains valid JSON
+      const jsonText = text.replace(/```json|```/g, '').trim();
+      return JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error("Error parsing AI response as JSON:", parseError);
+      return {
+        description: "You encounter a hostile creature blocking your path.",
+        options: ["Fight", "Negotiate", "Flee"],
+        difficulty: "medium"
+      };
+    }
   } catch (error) {
-    console.error('Error generating story element:', error);
-    return `A mysterious ${elementType} appears...`; // Fallback
+    console.error("Error generating random encounter:", error);
+    return {
+      description: "You encounter a hostile creature blocking your path.",
+      options: ["Fight", "Negotiate", "Flee"],
+      difficulty: "medium"
+    };
   }
 };
