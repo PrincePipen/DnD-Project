@@ -1,8 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_AI_KEY);
-const model = genAI.getGenerativeModel({ model: 'learnlm-1.5-pro-experimental' });
-const API_KEY = "AIzaSyCh9pnnCMfcDsymFEKhkCk_yWev3YKVBYo";
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 export async function generateStoryProgress(
   character: any,
