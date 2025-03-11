@@ -10,15 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.7",
+    "@supabase/supabase-js": "^2.49.1",
+    "axios": "^1.8.2",
     "clsx": "^2.1.0",
     "framer-motion": "^12.4.13",
     "howler": "^2.2.4",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.344.0",
     "openai": "^4.28.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.2",
+    "react-router-dom": "^6.30.0",
     "tailwind-merge": "^2.2.1",
     "zustand": "^4.5.1"
   },

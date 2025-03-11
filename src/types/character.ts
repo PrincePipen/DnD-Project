@@ -11,8 +11,8 @@ export interface Character {
     wisdom: number;
     charisma: number;
   };
-  abilities: string[];
-  inventory: InventoryItem[];
+  inventory?: InventoryItem[];
+  abilities?: string[];
 }
 
 export interface InventoryItem {
@@ -21,4 +21,5 @@ export interface InventoryItem {
   description: string;
   quantity: number;
   type: string; // e.g., "weapon", "armor", "potion"
+  icon?: string;
 }

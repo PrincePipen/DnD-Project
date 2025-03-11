@@ -1,11 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Game from './pages/Game';
+import CharacterCreation from './pages/CharacterCreation';
+import Settings from './pages/Settings';
 import CharacterSheet from './pages/CharacterSheet';
 import DungeonExplorer from './pages/DungeonExplorer';
 import Inventory from './pages/Inventory';
 import StoryJournal from './pages/StoryJournal';
-import { PageTransition } from './components/animations/PageTransition';
+import PageTransition from './components/animations/PageTransition';
 
 function App() {
   return (
@@ -15,10 +19,14 @@ function App() {
         <main className="container mx-auto px-4 py-8">
           <PageTransition>
             <Routes>
-              <Route path="/" element={<DungeonExplorer />} />
-              <Route path="/character" element={<CharacterSheet />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/game" element={<Game />} />
+              <Route path="/character" element={<CharacterCreation />} />
+              <Route path="/character-sheet" element={<CharacterSheet />} />
+              <Route path="/dungeon" element={<DungeonExplorer />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/story" element={<StoryJournal />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </PageTransition>
         </main>

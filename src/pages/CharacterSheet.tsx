@@ -1,10 +1,25 @@
 import React from 'react';
-import { useCharacterStats } from '../hooks/useCharacterStats';
+import { useGameStore } from '../store/game-store';
 import { Card } from '../components/shared/Card';
-import { AnimatedButton } from '../components/shared/AnimatedButton';
 
 const CharacterSheet = () => {
-  const { character, updateCharacter } = useCharacterStats();
+  const { character } = useGameStore();
+
+  // Placeholder character if none exists
+  const displayCharacter = character || {
+    name: "Example Character",
+    race: "Human",
+    class: "Fighter",
+    level: 1,
+    stats: {
+      strength: 10,
+      dexterity: 10, 
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
@@ -13,18 +28,18 @@ const CharacterSheet = () => {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="p-4">
           <h2 className="text-2xl font-bold mb-4">Character Info</h2>
-          <p><strong>Name:</strong> {character.name}</p>
-          <p><strong>Race:</strong> {character.race}</p>
-          <p><strong>Class:</strong> {character.class}</p>
-          <p><strong>Level:</strong> {character.level}</p>
+          <p><strong>Name:</strong> {displayCharacter.name}</p>
+          <p><strong>Race:</strong> {displayCharacter.race}</p>
+          <p><strong>Class:</strong> {displayCharacter.class}</p>
+          <p><strong>Level:</strong> {displayCharacter.level}</p>
         </Card>
 
-        <Card>
+        <Card className="p-4">
           <h2 className="text-2xl font-bold mb-4">Stats</h2>
           <ul className="space-y-2">
-            {Object.entries(character.stats).map(([stat, value]) => (
+            {Object.entries(displayCharacter.stats).map(([stat, value]) => (
               <li key={stat}>
                 <strong>{stat.charAt(0).toUpperCase() + stat.slice(1)}:</strong> {value}
               </li>
@@ -33,21 +48,14 @@ const CharacterSheet = () => {
         </Card>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Inventory</h2>
-        <ul className="space-y-2">
-          {character.inventory.map((item, index) => (
-            <li key={index} className="text-gray-300">
-              {item.name} - {item.quantity}
-            </li>
-          ))}
-        </ul>
-      </div>
-
       <div className="mt-8 flex justify-center">
-        <AnimatedButton onClick={() => updateCharacter({ ...character, level: character.level + 1 })}>
-          Level Up
-        </AnimatedButton>
+        <button
+          onClick={() => {/* Level up logic */}}
+          className="relative inline-flex items-center justify-center p-4 text-lg font-medium text-white bg-purple-600 rounded-md overflow-hidden group hover:bg-purple-700 transition-all duration-300"
+        >
+          <span className="absolute inset-0 w-full h-full transition-transform duration-300 transform scale-110 bg-purple-500 rounded-md group-hover:scale-125"></span>
+          <span className="relative z-10">Level Up</span>
+        </button>
       </div>
     </div>
   );
