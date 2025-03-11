@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { create } from 'zustand';
 import { Card } from '../components/shared/Card';
 import Toast from '../components/ui/Toast';
-import { useInventoryStore } from '../store/inventory-store';
-import { InventoryItem } from '../types/game';
 import useAudio from '../services/audioService';
 
 interface GroupedItems {
@@ -77,14 +75,6 @@ const defaultInventory: InventoryItemType[] = [
   }
 ];
 
-const createNewCharacter = (formData: { name: string, race: string, class: string }): Character => ({
-  id: crypto.randomUUID(),
-  name: formData.name,
-  race: formData.race,
-  class: formData.class,
-  level: 1,
-  inventory: defaultInventory, // Initialize with default inventory
-});
 
 export const useGameStore = create<GameState>((set) => ({
   character: null,
