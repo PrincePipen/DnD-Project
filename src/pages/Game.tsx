@@ -6,7 +6,7 @@ import { Card } from '../components/shared/Card';
 import { AnimatedButton } from '../components/shared/AnimatedButton';
 import DiceRoll from '../components/animations/DiceRoll';
 import { useAudio } from '../context/AudioContext';
-import { fetchAIResponse } from '../services/aiService';
+import { generateStoryProgress } from '../services/aiService';
 import Toast from '../components/ui/Toast';
 
 const Game = () => {
@@ -16,11 +16,11 @@ const Game = () => {
   
   // Game state
   const [showDice, setShowDice] = useState(false);
-  const [storyProgress, setStoryProgress] = useState(0);
+  const [] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [, setAiResponse] = useState('');
+  const [] = useState('');
   
   // Flag to track whether initial scene has been set
   const initialSceneSet = useRef(false);
@@ -50,35 +50,6 @@ const Game = () => {
   }, [character, navigate, currentScene, updateScene, addToLog, playAmbient]);
 
   // Progress the story based on user choices
-  const handleContinue = async () => {
-    setIsLoading(true);
-    try {
-      const nextScene = await fetchAIResponse({
-        character,
-        currentScene,
-        recentEvents: gameLog.slice(-3),
-        questProgress,
-        location: determineLocation(questProgress),
-        action: 'continue',
-        diceResult: undefined
-      });
-
-      updateScene(nextScene);
-      addToLog(nextScene);
-      setQuestProgress(questProgress + 1);
-      
-      // Change ambient sound based on location
-      if (questProgress > 5) {
-        playAmbient('dungeon');
-      }
-    } catch (error) {
-      console.error('Failed to progress story:', error);
-      setToastMessage('Something went wrong with the story progression...');
-      setShowToast(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Helper function to determine current location
   const determineLocation = (progress: number): string => {
@@ -87,45 +58,6 @@ const Game = () => {
     return 'dungeon';
   };
 
-  const handleAIContinue = async () => {
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    playEffect('ambient');
-    
-    try {
-      // Get current location based on story progress
-      const location = storyProgress >= storyBeats.length - 1 ? "village entrance" : "forest path";
-      
-      // Get recent events from game log (last 3 entries)
-      const recentEvents = gameLog.slice(-3);
-      
-      // Generate AI response
-      const aiContent = await fetchAIResponse({
-        character: character || undefined,
-        location: location, // Now this property is recognized
-        recentEvents,
-        prompt: "Continue the story with an interesting development or encounter.",
-        diceResult: undefined,
-        action: undefined,
-        currentScene: undefined
-      });
-      
-      // Update the scene with AI generated content
-      setAiResponse(aiContent);
-      updateScene(aiContent);
-      addToLog(aiContent);
-      
-      // Update story progress to beyond predefined beats
-      setStoryProgress(storyBeats.length);
-    } catch (error) {
-      console.error("Error getting AI story content:", error);
-      setToastMessage("Something went wrong with the storyteller's magic...");
-      setShowToast(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRollDice = () => {
     setShowDice(true);
@@ -140,8 +72,85 @@ const Game = () => {
     setShowDice(false);
   };
 
-  const handleVillageChoice = () => {
-    navigate('/dungeon');
+
+  const progressStory = async () => {
+    setIsLoading(true);
+    
+    try {
+      const newScene = await generateStoryProgress({
+        character: character || undefined,
+        currentScene,
+        recentEvents: gameLog.slice(-3),
+        questProgress,
+        location: determineLocation(questProgress),
+        action: 'continue',
+        diceResult: undefined,
+        prompt: ''
+      });
+
+      // Update the scene and log
+      updateScene(newScene);
+      addToLog(newScene);
+      
+      // Increment quest progress
+      setQuestProgress(questProgress + 1);
+      
+      // Change ambient sound based on location
+      handleLocationChange(questProgress + 1);
+      
+    } catch (error) {
+      console.error('Story progression failed:', error);
+      setToastMessage('The story hesitates for a moment...');
+      setShowToast(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLocationChange = (progress: number) => {
+    const location = determineLocation(progress);
+    
+    switch (location) {
+      case 'village':
+        playAmbient('village');
+        break;
+      case 'forest':
+        playAmbient('forest');
+        break;
+      case 'dungeon':
+        playAmbient('dungeon');
+        break;
+      default:
+        playAmbient('ambient');
+    }
+  };
+
+  const handlePlayerChoice = async (choice: string) => {
+    setIsLoading(true);
+    
+    try {
+      const result = await generateStoryProgress({
+        character: character ?? undefined,
+        currentScene,
+        recentEvents: gameLog.slice(-3),
+        questProgress,
+        location: determineLocation(questProgress),
+        action: choice,
+        diceResult: undefined,
+        prompt: ''
+      });
+      
+      updateScene(result);
+      addToLog(result);
+      playEffect('ambient');
+      
+    } catch (error) {
+      console.error('Choice processing failed:', error);
+      setToastMessage('Your choice leads to an uncertain outcome...');
+      setShowToast(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!character) return null;
@@ -178,23 +187,24 @@ const Game = () => {
         </div>
         
         <div className="mt-6 flex flex-wrap gap-4 justify-end">
-          <AnimatedButton onClick={handleRollDice} className="bg-indigo-600 hover:bg-indigo-700">
+          <AnimatedButton onClick={handleRollDice} className="bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
             Roll Dice
           </AnimatedButton>
           
-          {storyProgress === storyBeats.length - 1 ? (
+          {isLoading ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin h-5 w-5 border-2 border-purple-500 rounded-full border-t-transparent" />
+              <span>Processing...</span>
+            </div>
+          ) : (
             <>
-              <AnimatedButton onClick={handleVillageChoice} className="bg-green-600 hover:bg-green-700">
-                Enter Village
+              <AnimatedButton onClick={() => handlePlayerChoice('explore')} className="bg-green-600 hover:bg-green-700">
+                Explore
               </AnimatedButton>
-              <AnimatedButton onClick={handleAIContinue} className="bg-amber-600 hover:bg-amber-700">
-                Explore Surroundings
+              <AnimatedButton onClick={progressStory} className="bg-purple-600 hover:bg-purple-700">
+                Continue Journey
               </AnimatedButton>
             </>
-          ) : (
-            <AnimatedButton onClick={handleContinue}>
-              Continue Journey
-            </AnimatedButton>
           )}
         </div>
       </motion.div>

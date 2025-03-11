@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface Character {
@@ -9,6 +8,7 @@ interface Character {
 }
 
 export interface StoryContext {
+  questProgress: any;
   diceResult: undefined;
   action: any;
   currentScene: any;
@@ -91,5 +91,36 @@ export const generateRandomEncounter = async (characterLevel: number, environmen
       options: ["Fight", "Negotiate", "Flee"],
       difficulty: "medium"
     };
+  }
+};
+
+export const generateStoryProgress = async (context: StoryContext): Promise<string> => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    const prompt = `
+      You are a D&D Dungeon Master. Generate the next scene in the story based on:
+      
+      Character: ${context.character?.name || 'Unknown'}, Level ${context.character?.level || 1} ${context.character?.race || ''} ${context.character?.class || ''}
+      Current Location: ${context.location}
+      Current Scene: ${context.currentScene}
+      Quest Progress: ${context.questProgress}
+      Recent Events: ${context.recentEvents.slice(-3).join('. ')}
+      ${context.action ? `Player Action: ${context.action}` : ''}
+      ${context.diceResult ? `Dice Roll Result: ${context.diceResult}` : ''}
+
+      Generate a 2-3 sentence response that:
+      1. Advances the story naturally
+      2. Includes interesting details or choices
+      3. Maintains a fantasy RPG tone
+      4. Potentially introduces challenges or rewards
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    return response.text();
+  } catch (error) {
+    console.error('AI Story Generation Error:', error);
+    return "The story continues, though the path ahead remains uncertain...";
   }
 };
