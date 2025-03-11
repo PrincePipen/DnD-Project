@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply antialiased;
+    @apply antialiased bg-gray-900 text-white;
   }
 }
 
@@ -24,6 +24,14 @@
   .input {
     @apply bg-gray-700 border border-gray-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent;
   }
+
+  .animated-button {
+    @apply transition-transform duration-200 ease-in-out transform hover:scale-105;
+  }
+
+  .card {
+    @apply bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-700 transition-transform duration-200 hover:scale-105;
+  }
 }
 
 /* Custom scrollbar */
@@ -41,4 +49,33 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-in-out;
 }

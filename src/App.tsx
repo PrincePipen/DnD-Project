@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Sword, Scroll, User, Settings as SettingsIcon } from 'lucide-react';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Game from './pages/Game';
-import CharacterCreation from './pages/CharacterCreation';
-import Settings from './pages/Settings';
+import CharacterSheet from './pages/CharacterSheet';
+import DungeonExplorer from './pages/DungeonExplorer';
+import Inventory from './pages/Inventory';
+import StoryJournal from './pages/StoryJournal';
+import { PageTransition } from './components/animations/PageTransition';
 
 function App() {
   return (
@@ -13,12 +13,14 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
         <Navbar />
         <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/game" element={<Game />} />
-            <Route path="/character" element={<CharacterCreation />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
+          <PageTransition>
+            <Routes>
+              <Route path="/" element={<DungeonExplorer />} />
+              <Route path="/character" element={<CharacterSheet />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/story" element={<StoryJournal />} />
+            </Routes>
+          </PageTransition>
         </main>
       </div>
     </Router>
