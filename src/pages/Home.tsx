@@ -43,7 +43,13 @@ const Home = () => {
   );
 };
 
-const FeatureCard = ({ icon, title, description }) => (
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const FeatureCard = ({ icon, title, description }: FeatureCardProps) => (
   <div className="p-6 bg-gray-800 rounded-lg border border-gray-700 hover:border-purple-500 transition-colors duration-200">
     <div className="flex flex-col items-center space-y-4">
       {icon}
