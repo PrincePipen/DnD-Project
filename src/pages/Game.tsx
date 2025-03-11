@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/game-store';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { Card } from '../components/shared/Card';
 import { AnimatedButton } from '../components/shared/AnimatedButton';
 import DiceRoll from '../components/animations/DiceRoll';
 import { useAudio } from '../context/AudioContext';
-import { getAIStoryContent } from '../services/aiService';
+import { fetchAIResponse } from '../services/aiService';
 import Toast from '../components/ui/Toast';
 
 const Game = () => {
@@ -84,11 +84,14 @@ const Game = () => {
       const recentEvents = gameLog.slice(-3);
       
       // Generate AI response
-      const aiContent = await getAIStoryContent({
+      const aiContent = await fetchAIResponse({
         character: character || undefined,
-        currentLocation: location,
+        location: location, // Now this property is recognized
         recentEvents,
-        prompt: "Continue the story with an interesting development or encounter."
+        prompt: "Continue the story with an interesting development or encounter.",
+        diceResult: undefined,
+        action: undefined,
+        currentScene: undefined
       });
       
       // Update the scene with AI generated content
@@ -218,3 +221,4 @@ const Game = () => {
 };
 
 export default Game;
+

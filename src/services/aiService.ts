@@ -1,59 +1,61 @@
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize the Google Generative AI with your API key
-// In production, this should be an environment variable
-const API_KEY = "AIzaSyCh9pnnCMfcDsymFEKhkCk_yWev3YKVBYo";
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-interface StoryGenerationParams {
-  character?: {
-    name: string;
-    race: string;
-    class: string;
-    level: number;
-  };
-  currentLocation?: string;
-  recentEvents?: string[];
-  prompt?: string;
+interface Character {
+  name: string;
+  race: string;
+  class: string;
+  level: number;
 }
 
-export const getAIStoryContent = async ({
-  character,
-  currentLocation = "forest path",
-  recentEvents = [],
-  prompt
-}: StoryGenerationParams) => {
+export interface StoryContext {
+  diceResult: undefined;
+  action: any;
+  currentScene: any;
+  character?: Character;
+  location: string;
+  recentEvents: string[];
+  prompt: string;
+}
+
+const API_KEY = process.env.VITE_GOOGLE_AI_API_KEY || 'AIzaSyCh9pnnCMfcDsymFEKhkCk_yWev3YKVBYo';
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+export const fetchAIResponse = async (context: StoryContext): Promise<string> => {
   try {
-    // Get the generative model
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    // Construct the context for the AI
-    let context = `You are a storyteller for a Dungeons & Dragons adventure. Write a short, engaging paragraph (maximum 3 sentences) `;
+    // Build prompt based on context
+    let prompt = `You are a Dungeon Master for a D&D game. `;
     
-    if (character) {
-      context += `for ${character.name}, a level ${character.level} ${character.race} ${character.class}. `;
+    if (context.character) {
+      prompt += `The player is ${context.character.name}, a level ${context.character.level} ${context.character.race} ${context.character.class}. `;
     }
     
-    if (currentLocation) {
-      context += `The character is currently in/at a ${currentLocation}. `;
+    if (context.currentScene) {
+      prompt += `Current scene: ${context.currentScene}. `;
     }
     
-    if (recentEvents && recentEvents.length > 0) {
-      context += `Recent events include: ${recentEvents.join('. ')}. `;
+    if (context.recentEvents?.length) {
+      prompt += `Recent events: ${context.recentEvents.join('. ')}. `;
     }
     
-    context += prompt || "Continue the story with an interesting development or encounter.";
+    if (context.action) {
+      prompt += `The player chose to ${context.action}. `;
+    }
+    
+    if (context.diceResult !== undefined) {
+      prompt += `They rolled a ${context.diceResult} on a d20. `;
+    }
+    
+    prompt += `Generate a short, engaging response (2-3 sentences) describing what happens next.`;
 
-    // Generate content with the model
-    const result = await model.generateContent(context);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
-    console.error("Error generating AI content:", error);
-    return "The journey continues as you move forward...";
+    console.error('AI Response Error:', error);
+    return "The story continues..."; // Fallback response
   }
 };
 
