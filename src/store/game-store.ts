@@ -16,6 +16,9 @@ interface Character {
     charisma: number;
   };
   createdAt: string;
+  lastScene?: string;
+  lastChoices?: string[];
+  gameLog?: string[];
 }
 
 interface GameState {
@@ -31,6 +34,8 @@ interface GameState {
   addToLog: (entry: string) => void;
   setChoices: (choices: string[]) => void;
   setLoading: (loading: boolean) => void;
+  deleteCharacter: (id: string) => void;
+  saveCharacterProgress: (characterId: string, scene: string, choices: string[], log: string[]) => void;
 }
 
 export const useGameStore = create<GameState>()(
@@ -53,12 +58,30 @@ export const useGameStore = create<GameState>()(
             },
           ],
         })),
-      setActiveCharacter: (character) => set({ activeCharacter: character }),
+      setActiveCharacter: (character) => set({ 
+        activeCharacter: character,
+        currentScene: character.lastScene || '',
+        choices: character.lastChoices || [],
+        gameLog: character.gameLog || []
+      }),
       updateScene: (scene) => set({ currentScene: scene }),
       addToLog: (entry) =>
         set((state) => ({ gameLog: [...state.gameLog, entry] })),
       setChoices: (choices) => set({ choices }),
       setLoading: (loading) => set({ isLoading: loading }),
+      deleteCharacter: (id) =>
+        set((state) => ({
+          characters: state.characters.filter((char) => char.id !== id),
+          activeCharacter: state.activeCharacter?.id === id ? null : state.activeCharacter,
+        })),
+      saveCharacterProgress: (characterId, scene, choices, log) =>
+        set((state) => ({
+          characters: state.characters.map((char) =>
+            char.id === characterId
+              ? { ...char, lastScene: scene, lastChoices: choices, gameLog: log }
+              : char
+          ),
+        })),
     }),
     {
       name: 'game-storage',
